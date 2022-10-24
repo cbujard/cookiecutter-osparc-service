@@ -72,6 +72,19 @@ def context_print(
     print("DONE")
 
 
+def check_python():
+    is_pyconfig = "python" in SELECTED_DOCKER_BASE
+
+    for fp in Path(".osparc").glob("Python.*"):
+        if fp.is_file():
+            if is_pyconfig:
+                fp.rename(fp.parent / fp.name.removeprefix("Python."))
+            else:
+                fp.unlink(missing_ok=True)
+
+    # TODO: if python, then service.cli has to be removed!
+
+
 def main():
     print("Starting post-gen-project hook:", flush=True)
     try:
@@ -81,8 +94,12 @@ def main():
         with context_print("Updating .gitignore and .dockerignore configs"):
             create_ignore_listings()
 
+        with context_print("Updating service binder"):
+            check_python()
+
         with context_print("Adding config for selected external repository"):
             create_repo_folder()
+
 
     except Exception as exc:  # pylint: disable=broad-except
         print("ERROR", exc)
