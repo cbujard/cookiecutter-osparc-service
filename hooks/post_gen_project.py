@@ -82,7 +82,8 @@ def check_python():
             else:
                 fp.unlink(missing_ok=True)
 
-    # TODO: if python, then service.cli has to be removed!
+    if is_pyconfig:
+        shutil.rmtree("service.cli")
 
 
 def main():
@@ -99,7 +100,6 @@ def main():
 
         with context_print("Adding config for selected external repository"):
             create_repo_folder()
-
 
     except Exception as exc:  # pylint: disable=broad-except
         print("ERROR", exc)
