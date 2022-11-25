@@ -20,6 +20,9 @@ SELECTED_DOCKER_BASE = "{{ cookiecutter.docker_base }}"
 SELECTED_GIT_REPO = "{{ cookiecutter.git_repo }}"
 
 
+OSPARC_METADATA_PATH = Path(".osparc") / "metadata.yml"
+
+
 def create_dockerfile():
     folder_name = Path("docker") / SELECTED_DOCKER_BASE.split(":")[0]
 
@@ -90,6 +93,10 @@ def check_python():
 
     if is_pyconfig:
         shutil.rmtree("service.cli")
+
+        # settings.json contains metadata
+        if (Path(".osparc") / "settings.json").exists():
+            OSPARC_METADATA_PATH.unlink(missing_ok=True)
 
 
 def main():

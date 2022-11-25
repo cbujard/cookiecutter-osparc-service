@@ -71,8 +71,9 @@ error_console = Console(stderr=True)
 # ----------------------------------------------------------------------------------------------------------
 
 
-class ConfigSettings(BaseModel):
+class DotOsparcSettings(BaseModel):
     publish_functions: list[str]
+    default_metadata: dict[str, Any]
 
 
 def discover_published_functions(
@@ -202,9 +203,7 @@ class SchemaResolver:
 
 
 @validate_arguments(config=dict(arbitrary_types_allowed=True))
-def dump_dot_osparc_config(
-    core_func: Callable,
-):
+def dump_dot_osparc_config(core_func: Callable, default_metadata: dict[str, Any]):
     def _create_inputs(parameters: Mapping[str, Parameter]) -> dict[str, Any]:
         inputs = {}
         for parameter in parameters.values():
@@ -283,27 +282,23 @@ def dump_dot_osparc_config(
     outputs = _create_outputs(signature.return_annotation)
 
     # TODO: sync this with metadata and runtime models!
-    # TODO: read from .osparc/metadata
     config_folder = DOT_OSPARC_DIR / core_func.__name__
     config_folder.mkdir(parents=True, exist_ok=True)
 
     def _update_metadata_file():
         metadata_path = config_folder / "metadata.yml"
-        metadata = {
-            "name": f"{core_func.__name__}",
-            "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Test.svg/315px-Test.svg.png",
-            "description": "",
-            "key": f"simcore/services/comp/ofs-{core_func.__name__}",
-            "integration-version": "1.0.0",
-            "type": "computational",
-        }
 
         if not metadata_path.exists():
-            for other_metadata in DOT_OSPARC_DIR.rglob("metadata.yml"):
-                shutil.copyfile(other_metadata, metadata_path)
-                break
-
-        with suppress(FileNotFoundError):
+            # init
+            metadata = deepcopy(default_metadata)
+            metadata.update(
+                **{
+                    "name": f"{core_func.__name__}",
+                    "key": f"{metadata['key']}.{core_func.__name__}",
+                }
+            )
+        else:
+            # previous version
             prev_metadata = yaml.safe_load(metadata_path.read_text())
             metadata.update(prev_metadata)
 
@@ -467,7 +462,7 @@ def run_service(core_func: Callable):
 # ----------------------------------------------------------------------------------------------------------
 
 
-def create_group(core_func: Callable, settings: dict[str, Any]) -> typer.Typer:
+def create_group(core_func: Callable, settings: DotOsparcSettings) -> typer.Typer:
     app = typer.Typer(help=core_func.__doc__)
 
     @app.command()
@@ -489,15 +484,13 @@ def create_group(core_func: Callable, settings: dict[str, Any]) -> typer.Typer:
 
         # TOOLING
         elif dot_osparc_config:
-            dump_dot_osparc_config(
-                core_func,
-            )
+            dump_dot_osparc_config(core_func, settings.default_metadata)
             return
 
     return app
 
 
-def create_cli(expose: list[Callable], settings: dict[str, Any]) -> typer.Typer:
+def create_cli(expose: list[Callable], settings: DotOsparcSettings) -> typer.Typer:
     if not expose:
         raise ValueError(
             "No published functions could be exposed.\n"
@@ -514,32 +507,31 @@ def create_cli(expose: list[Callable], settings: dict[str, Any]) -> typer.Typer:
     return app
 
 
-def get_settings() -> ConfigSettings:
-    settings_path = DOT_OSPARC_DIR / "settings.json"
+def load_settings(settings_path: Path) -> DotOsparcSettings:
+    settings = DotOsparcSettings.parse_raw(settings_path.read_text())
 
-    if settings_path.exists():
-        config_settings = ConfigSettings.parse_raw(settings_path.read_text())
-
-    else:
+    if not settings.publish_functions:
         value = input(
             f"Initializing {settings_path} ... \n"
             "Name a function to expose (e.g. {{ cookiecutter.project_package_name }}.my_function): "
         )
-        config_settings = ConfigSettings(publish_functions=[value])
-        settings_path.write_text(config_settings.json(indent=1))
-        run_logger.info(" %s created %s", ALERT_PREFIX, settings_path)
-    return config_settings
+        settings.publish_functions = [value]
+
+        settings_path.write_text(settings.json(indent=1))
+        run_logger.info(" %s updated %s", ALERT_PREFIX, settings_path)
+
+    return settings
 
 
 if __name__ == "__main__":
     try:
-        config_settings = get_settings()
+        settings = load_settings(settings_path=DOT_OSPARC_DIR / "settings.json")
 
         main = create_cli(
             expose=discover_published_functions(
-                config_settings.publish_functions, dot_osparc_dir=DOT_OSPARC_DIR
+                settings.publish_functions, dot_osparc_dir=DOT_OSPARC_DIR
             ),
-            settings=config_settings,
+            settings=settings,
         )
         main()
     except Exception as error:  # pylint: disable=broad-except

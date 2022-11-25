@@ -1,0 +1,20 @@
+{
+  "publish_functions": [],
+  "default_metadata": {
+    "name": "{{ cookiecutter.project_name }}",
+    "key": "simcore/services/{%- if cookiecutter.project_type == "computational" -%}comp{%- elif cookiecutter.project_type == "dynamic" -%}dynamic{%- endif -%}/{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
+    "type": "{{ cookiecutter.project_type }}",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Test.svg/315px-Test.svg.png",
+    "integration-version": "1.0.0",
+    "version": "{{ cookiecutter.version }}",
+    "description": "{{ cookiecutter.project_short_description }}",
+    "contact": "{{ cookiecutter.contact_email }}",
+    "authors": [
+      {
+        "name": "{{ cookiecutter.author_name }}",
+        "email": "{{ cookiecutter.author_email }}",
+        "affiliation": "{{ cookiecutter.author_affiliation }}"
+      }
+    ]
+  }
+}
