@@ -27,7 +27,6 @@ import os
 import sys
 from contextlib import suppress
 from copy import deepcopy
-from curses import meta
 from inspect import Parameter, Signature
 from pathlib import Path
 from textwrap import indent
