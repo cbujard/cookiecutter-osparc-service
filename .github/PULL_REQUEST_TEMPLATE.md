@@ -2,11 +2,15 @@
 WIP: work in progress
 
 Consider prefix your PR message with an emoticon
-  🐛 bugfix
-  ✨ new feature
-  🔨 refactoring
+  🐛    Fix a bug.
+  ✨    Introduce new features.
+  ♻️     Refactor code.
+  🚑️    Critical hotfix.
   🏗️ maintenance
-  📚 documentation
+  ⬆️     Upgrade dependencies.
+  📝    Add or update documentation.
+  🔨    Add or update development scripts.
+  🔒️    Fix security issues.
 
 and append (⚠️ devops) if changes in devops configuration required before deploying
 
