@@ -18,7 +18,7 @@ if sys.version_info < (3, 8):
         f"{ALERT_PREFIX} Unsupported python version, got {sys.version_info} and expected >=3.8"
     )
 
-
+import shutil
 import importlib  # nopycln: import
 import importlib.util  # nopycln: import
 import inspect
@@ -298,6 +298,11 @@ def dump_dot_osparc_config(
             "type": "computational",
         }
 
+        if not metadata_path.exists():
+            for other_metadata in DOT_OSPARC_DIR.rglob("metadata.yml"):
+                shutil.copyfile(other_metadata, metadata_path)
+                break
+
         with suppress(FileNotFoundError):
             prev_metadata = yaml.safe_load(metadata_path.read_text())
             metadata.update(prev_metadata)
@@ -311,6 +316,8 @@ def dump_dot_osparc_config(
 
         with metadata_path.open("wt") as fh:
             yaml.safe_dump(metadata, fh, indent=1, sort_keys=False)
+
+        rich.print(f"Updated {metadata_path}")
 
     def _update_runtime_file():
         runtime_path = config_folder / "runtime.yml"
@@ -336,6 +343,8 @@ def dump_dot_osparc_config(
 
         with runtime_path.open("wt") as fh:
             yaml.safe_dump(runtime, fh, indent=1, sort_keys=False)
+
+        rich.print(f"Updated {runtime_path}")
 
     _update_metadata_file()
     _update_runtime_file()
