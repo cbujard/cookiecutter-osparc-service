@@ -78,6 +78,8 @@ class ConfigSettings(BaseModel):
 def discover_published_functions(
     functions_dotted_names: list[str], *, dot_osparc_dir: Path
 ) -> list:
+    IMPORT_MODULE_EXCEPTIONS = (AttributeError, ModuleNotFoundError, FileNotFoundError)
+
     def _import_module_from_path(module_name: str, module_path: Path):
         spec = importlib.util.spec_from_file_location(module_name, module_path)
         module = importlib.util.module_from_spec(spec)
@@ -92,26 +94,50 @@ def discover_published_functions(
         func_name = parts[-1]
 
         try:
+            module = None
             try:
+                # Just import 'module_name'
                 module = importlib.import_module(module_name)
 
             except (
                 ImportError,
                 ModuleNotFoundError,
-            ):  # if fails, try checking for the code in $here, given $here/.osparc
-                module_tail_path = "/".join(parts[:-1]) + ".py"
-                module = _import_module_from_path(
-                    module_name, dot_osparc_dir.parent / module_tail_path
-                )
+            ):
+                # Did not work, let's run some guesses
+
+                # namespaces to path: a.b.c.f  -> a/b/c
+                namespaces_path = "/".join(parts[:-1])
+
+                for guess_dir in (
+                    dot_osparc_dir.parent,
+                    dot_osparc_dir.parent
+                    / "src/{{ cookiecutter.project_package_name }}",
+                    dot_osparc_dir.parent / "src",
+                ):
+                    # module can be a package 'a/b/__init__.py' or a file 'a/b.py'
+                    for guess_module_path in (
+                        guess_dir / namespaces_path / "__init__.py",
+                        guess_dir / (namespaces_path + ".py"),
+                    ):
+                        with suppress(*IMPORT_MODULE_EXCEPTIONS):
+                            module = _import_module_from_path(
+                                module_name, guess_module_path
+                            )
+
+                if module is None:
+                    raise ImportError(
+                        f"Cannot find module {module_name} with function {func_name}"
+                    )
 
             published.append(getattr(module, func_name))
-        except (AttributeError, ModuleNotFoundError, FileNotFoundError) as exc:
+
+        except (AttributeError, ImportError) as exc:
             error_console.log(
-                "{} Skipping publish_functions '{}' {}:\n{}".format(
+                "{} Skipping function '{}' {}:\n{}".format(
                     ALERT_PREFIX,
                     dotted_name,
-                    f"could not load module. {TIP_PREFIX} 'export PYTHONPATH=/path/to/my/package' so it is importable",
-                    indent(f"{exc}", prefix=" "),
+                    f"Could not import this function. {TIP_PREFIX} run 'export PYTHONPATH=/path/to/my/package'",
+                    indent(f"{exc}", prefix="->"),
                 )
             )
 
@@ -486,15 +512,13 @@ def get_settings() -> ConfigSettings:
         config_settings = ConfigSettings.parse_raw(settings_path.read_text())
 
     else:
-        value = input("Expose function (e.g. package.func ):")
+        value = input(
+            f"Initializing {settings_path} ... \n"
+            "Name a function to expose (e.g. {{ cookiecutter.project_package_name }}.my_function): "
+        )
         config_settings = ConfigSettings(publish_functions=[value])
         settings_path.write_text(config_settings.json(indent=1))
-        run_logger.info(
-            " %s created empty settings file [%s]: %s expose some functions",
-            ALERT_PREFIX,
-            settings_path,
-            TIP_PREFIX,
-        )
+        run_logger.info(" %s created %s", ALERT_PREFIX, settings_path)
     return config_settings
 
 
