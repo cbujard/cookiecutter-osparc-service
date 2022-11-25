@@ -10,6 +10,12 @@ import os
 from contextlib import contextmanager
 
 
+if sys.version_info < (3.8):
+    raise ValueError(
+        f"Unsupported python version, got {sys.version_info} and expected >=3.8"
+    )
+
+
 SELECTED_DOCKER_BASE = "{{ cookiecutter.docker_base }}"
 SELECTED_GIT_REPO = "{{ cookiecutter.git_repo }}"
 
@@ -75,7 +81,7 @@ def context_print(
 def check_python():
     is_pyconfig = "python" in SELECTED_DOCKER_BASE
 
-    for fp in Path(".osparc").glob("Python.*"):
+    for fp in Path(".osparc").rglob("Python.*"):
         if fp.is_file():
             if is_pyconfig:
                 fp.rename(fp.parent / fp.name.removeprefix("Python."))
