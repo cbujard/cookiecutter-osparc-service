@@ -7,16 +7,17 @@
 #   osparc-base-image
 #
 
-# TODO: can we auto-generate this code from pre-tested functions and classes?
-# TODO: autogenerate for different python targets?
-# TODO: how can we guarantee that the generated code is backwards compatible with the osparc integration API?
-# TODO: some git functionality to e.g. infer user name?
+ALERT_PREFIX = "🚨"
+TIP_PREFIX = "🔊 TIP:"
 
-# TODO: keep dependencies in check
-#       pydantic[email]>=1.10,<2.0.0
-#       pyyaml
-#       typer[all]>=0.6.1,<1.0.0
-#       typing_extensions ; python_version<'3.8'
+
+import sys
+
+if sys.version_info < (3, 8):
+    raise ValueError(
+        f"{ALERT_PREFIX} Unsupported python version, got {sys.version_info} and expected >=3.8"
+    )
+
 
 import importlib  # nopycln: import
 import importlib.util  # nopycln: import
@@ -31,25 +32,28 @@ from inspect import Parameter, Signature
 from pathlib import Path
 from textwrap import indent
 from typing import Any, Callable, Mapping, Optional
+from typing import get_args, get_origin
 
-import rich
-import typer
-import yaml
-from pydantic import (
-    BaseModel,
-    BaseSettings,
-    ValidationError,
-    validate_arguments,
-    validator,
-)
-from pydantic.decorator import ValidatedFunction
-from pydantic.tools import schema_of
-from rich.console import Console
 
 try:
-    from typing import get_args, get_origin
-except ImportError:
-    from typing_extensions import get_args, get_origin
+    # .osparc/requirements.txt
+    import rich
+    import typer
+    import yaml
+    from pydantic import (
+        BaseModel,
+        BaseSettings,
+        ValidationError,
+        validate_arguments,
+        validator,
+    )
+    from pydantic.decorator import ValidatedFunction
+    from pydantic.tools import schema_of
+    from rich.console import Console
+
+except ImportError as err:
+    err.msg += f".\n {TIP_PREFIX} did you install osparc python dependencies, i.e. 'pip install -r .osparc/requirements.txt'??"
+    raise
 
 
 DOT_OSPARC_DIR = (
@@ -103,9 +107,11 @@ def discover_published_functions(
             published.append(getattr(module, func_name))
         except (AttributeError, ModuleNotFoundError, FileNotFoundError) as exc:
             error_console.log(
-                "🚨 Skipping publish_functions {} {}:\n{}".format(
+                "{} Skipping publish_functions {} {}:\n{}".format(
+                    ALERT_PREFIX,
                     dotted_name,
-                    "Could not load module. TIP: Include path to the package in PYTHONPATH environment variable",
+                    "Could not load module.\n"
+                    f"{TIP_PREFIX} Include path to the package in PYTHONPATH environment variable. e.g. 'export PYTHONPATH=/path/to/my/package'",
                     indent(f"{exc}", prefix=" "),
                 )
             )
@@ -460,7 +466,8 @@ def create_group(core_func: Callable, settings: dict[str, Any]) -> typer.Typer:
 def create_cli(expose: list[Callable], settings: dict[str, Any]) -> typer.Typer:
     if not expose:
         raise ValueError(
-            "No published functions could be exposed. TIP: Include path to the package in PYTHONPATH environment variable"
+            "No published functions could be exposed.\n"
+            f"{TIP_PREFIX} Include path to the package in PYTHONPATH environment variable"
         )
 
     app = typer.Typer(
