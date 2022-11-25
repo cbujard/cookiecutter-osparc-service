@@ -7,12 +7,9 @@
 ```console
 $ make help
 
-$ make devenv
-$ source .venv/bin/activate
-
-(.venv)$ make build
-(.venv)$ make info-build
-(.venv)$ make tests
+$ make build
+$ make info-build
+$ make tests
 ```
 
 ## Workflow
@@ -23,10 +20,3 @@ $ source .venv/bin/activate
 3. The [execute]({{ cookiecutter.project_slug }}/service.cli/execute) shell script shall be modified to run the service using the expected inputs and retrieve the expected outputs.
 4. The test input/output shall be copied to [validation]({{ cookiecutter.project_slug }}/validation).
 5. The service docker image may be built and tested as ``make build tests`` (see usage above)
-
-
-
----
-<p align="center">
-<image src="https://github.com/ITISFoundation/osparc-simcore-python-client/blob/4e8b18494f3191d55f6692a6a605818aeeb83f95/docs/_media/mwl.png" alt="Made with love at www.z43.swiss" width="20%" />
-</p>
