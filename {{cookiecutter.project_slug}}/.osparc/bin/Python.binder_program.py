@@ -53,9 +53,11 @@ except ImportError:
 
 
 DOT_OSPARC_DIR = (
-    Path(sys.argv[0] if __name__ == "__main__" else __file__).resolve().parent
+    Path(sys.argv[0] if __name__ == "__main__" else __file__).resolve().parent.parent
 )
 
+assert DOT_OSPARC_DIR.exists()  # nosec
+assert DOT_OSPARC_DIR.name == ".osparc"  # nosec
 
 error_console = Console(stderr=True)
 
