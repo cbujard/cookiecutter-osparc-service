@@ -21,14 +21,19 @@ pip install cookiecutter
 
 ## Usage
 
-Generate a new Cookiecutter template layout:
+Prepare a python environment (optional)
+
 ```console
 python3 -m venv .venv
 source .venv/bin/activate
+```
+
+and generate a new Cookiecutter template layout
+```console
 cookiecutter gh:ITISFoundation/cookiecutter-osparc-service
 ```
 
-Check [FAQ](./FAQ.md)
+For more information, check [FAQ](./FAQ.md)
 
 
 ## Development
