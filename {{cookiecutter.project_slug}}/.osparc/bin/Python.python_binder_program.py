@@ -107,11 +107,10 @@ def discover_published_functions(
             published.append(getattr(module, func_name))
         except (AttributeError, ModuleNotFoundError, FileNotFoundError) as exc:
             error_console.log(
-                "{} Skipping publish_functions {} {}:\n{}".format(
+                "{} Skipping publish_functions '{}' {}:\n{}".format(
                     ALERT_PREFIX,
                     dotted_name,
-                    "Could not load module.\n"
-                    f"{TIP_PREFIX} Include path to the package in PYTHONPATH environment variable. e.g. 'export PYTHONPATH=/path/to/my/package'",
+                    f"could not load module. {TIP_PREFIX} 'export PYTHONPATH=/path/to/my/package' so it is importable",
                     indent(f"{exc}", prefix=" "),
                 )
             )
@@ -480,11 +479,28 @@ def create_cli(expose: list[Callable], settings: dict[str, Any]) -> typer.Typer:
     return app
 
 
+def get_settings() -> ConfigSettings:
+    settings_path = DOT_OSPARC_DIR / "settings.json"
+
+    if settings_path.exists():
+        config_settings = ConfigSettings.parse_raw(settings_path.read_text())
+
+    else:
+        value = input("Expose function (e.g. package.func ):")
+        config_settings = ConfigSettings(publish_functions=[value])
+        settings_path.write_text(config_settings.json(indent=1))
+        run_logger.info(
+            " %s created empty settings file [%s]: %s expose some functions",
+            ALERT_PREFIX,
+            settings_path,
+            TIP_PREFIX,
+        )
+    return config_settings
+
+
 if __name__ == "__main__":
     try:
-        config_settings = ConfigSettings.parse_raw(
-            (DOT_OSPARC_DIR / "settings.json").read_text()
-        )
+        config_settings = get_settings()
 
         main = create_cli(
             expose=discover_published_functions(
