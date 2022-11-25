@@ -10,7 +10,7 @@ import os
 from contextlib import contextmanager
 
 
-if sys.version_info < (3.8):
+if sys.version_info < (3, 8):
     raise ValueError(
         f"Unsupported python version, got {sys.version_info} and expected >=3.8"
     )
