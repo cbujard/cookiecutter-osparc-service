@@ -84,12 +84,13 @@ def context_print(
 def check_python():
     is_pyconfig = "python" in SELECTED_DOCKER_BASE
 
-    for fp in Path(".osparc").rglob("Python.*"):
-        if fp.is_file():
-            if is_pyconfig:
-                fp.rename(fp.parent / fp.name.removeprefix("Python."))
-            else:
-                fp.unlink(missing_ok=True)
+    for folder in ("src", ".osparc"):
+        for fp in Path(folder).rglob("Python.*"):
+            if fp.is_file():
+                if is_pyconfig:
+                    fp.rename(fp.parent / fp.name.removeprefix("Python."))
+                else:
+                    fp.unlink(missing_ok=True)
 
     if is_pyconfig:
         shutil.rmtree("service.cli")
