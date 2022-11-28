@@ -18,7 +18,6 @@ if sys.version_info < (3, 8):
         f"{ALERT_PREFIX} Unsupported python version, got {sys.version_info} and expected >=3.8"
     )
 
-import shutil
 import importlib  # nopycln: import
 import importlib.util  # nopycln: import
 import inspect
