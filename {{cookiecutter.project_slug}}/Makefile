@@ -14,6 +14,27 @@ export COMPOSE_OUTPUT_DIR := .tmp/output
 OSPARC_DIR:=$(CURDIR)/.osparc
 APP_NAME := {{ cookiecutter.project_slug }}
 
+{% if "python" in cookiecutter.docker_base %}
+## ENVIRONMENT -------------------------------
+
+.PHONY: devenv
+
+.venv:
+	@python3 --version
+	python3 -m venv $@
+	## upgrading tools to latest version in $(shell python3 --version)
+	$@/bin/pip3 --quiet install --upgrade \
+		pip \
+		wheel \
+		setuptools
+	@$@/bin/pip3 list --verbose
+
+devenv: .venv ## create a python virtual environment with dev tools (e.g. linters, etc)
+	$</bin/pip3 --quiet install -r ./osparc/requirements.txt
+	# Installing pre-commit hooks in current .git repo
+	@$</bin/pre-commit install
+	@echo "To activate the venv, execute 'source .venv/bin/activate'"
+{%- endif %}
 
 # INTEGRATION -----------------------------------------------------------------
 {% if "python" not in cookiecutter.docker_base %}
@@ -27,15 +48,15 @@ METADATA := .osparc/metadata.yml
 .PHONY: VERSION
 VERSION: $(METADATA) ## generates VERSION from metadata
 	# updating $@ from $<
-	@$(OSPARC_DIR)/bin/ooil.bash get-version --metadata-file $< > $@
+	@$(OSPARC_DIR)/bin/ooil get-version --metadata-file $< > $@
 
 service.cli/run: $(METADATA) ## generates run from metadata
 	# Updates adapter script from metadata in $<
-	@$(OSPARC_DIR)/bin/ooil.bash run-creator --metadata $< --runscript $@
+	@$(OSPARC_DIR)/bin/ooil run-creator --metadata $< --runscript $@
 
 docker-compose.yml: $(METADATA) ## generates docker-compose
 	# Injects metadata from $< as labels
-	@$(OSPARC_DIR)/bin/ooil.bash compose --to-spec-file $@ --metadata $<
+	@$(OSPARC_DIR)/bin/ooil compose --to-spec-file $@ --metadata $<
 {%- endif %}
 
 
@@ -68,14 +89,14 @@ info-build: ## displays info on the built image
 # TESTS-----------------------------------------------------------------
 .PHONY: test tests
 test tests:  ## runs validation tests
-	@$(OSPARC_DIR)/bin/ooil.bash test .
+	@$(OSPARC_DIR)/bin/ooil test .
 
 
 # PUBLISHING -----------------------------------------------------------------
 {% if "python" not in cookiecutter.docker_base %}
 .PHONY: version-service-patch version-service-minor version-service-major
 version-service-patch version-service-minor version-service-major: $(METADATA) ## kernel/service versioning as patch
-	$(OSPARC_DIR)/bin/ooil.bash bump-version --metadata-file $<  --upgrade $(subst version-service-,,$@)
+	$(OSPARC_DIR)/bin/ooil bump-version --metadata-file $<  --upgrade $(subst version-service-,,$@)
 	# syncing metadata upstream
 	@$(MAKE) VERSION
 
@@ -144,7 +165,7 @@ info: ## general info
 	@echo ' docker buildx               : $(shell docker buildx version)'
 	@echo ' docker-compose              : $(shell docker-compose --version)'
 	# exe: integration tools
-	@echo ' ooil version                : $(shell $(OSPARC_DIR)/bin/ooil.bash --version)'
+	@echo ' ooil version                : $(shell $(OSPARC_DIR)/bin/ooil --version)'
 
 
 
