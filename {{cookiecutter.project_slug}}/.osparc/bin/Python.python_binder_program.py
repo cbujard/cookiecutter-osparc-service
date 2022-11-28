@@ -10,7 +10,6 @@
 ALERT_PREFIX = "🚨"
 TIP_PREFIX = "🔊 TIP:"
 
-
 import sys
 
 if sys.version_info < (3, 8):
@@ -55,9 +54,10 @@ except ImportError as err:
     raise
 
 
-DOT_OSPARC_DIR = (
-    Path(sys.argv[0] if __name__ == "__main__" else __file__).resolve().parent.parent
-)
+FILE_FILEPATH = Path(sys.argv[0] if __name__ == "__main__" else __file__).resolve()
+THIS_FILENAME = FILE_FILEPATH.name.removeprefix("Python.")
+
+DOT_OSPARC_DIR = FILE_FILEPATH.parent.parent
 
 assert DOT_OSPARC_DIR.exists()  # nosec
 assert DOT_OSPARC_DIR.name == ".osparc"  # nosec
@@ -330,7 +330,7 @@ def dump_dot_osparc_config(core_func: Callable, default_metadata: dict[str, Any]
                 "name": "ContainerSpec",
                 "type": "ContainerSpec",
                 "value": {
-                    "Command": [".osparc/binder_program.py", core_func.__name__, "run"]
+                    "Command": [f".osparc/{THIS_FILENAME}", core_func.__name__, "run"]
                 },
             },
         )
