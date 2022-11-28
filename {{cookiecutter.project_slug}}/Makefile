@@ -1,12 +1,4 @@
-#
-# CONVENTIONS:
-#
-# - targets shall be ordered such that help list rensembles a typical workflow, e.g. 'make devenv tests'
-# - add doc to relevant targets
-# - internal targets shall start with '.'
-# - KISS
-#
-# author: {{ cookiecutter.author_name }}
+# Author: {{ cookiecutter.author_name }}
 
 SHELL = /bin/sh
 .DEFAULT_GOAL := help
@@ -16,21 +8,21 @@ export VCS_REF    := $(shell git rev-parse --short HEAD 2> /dev/null || echo unv
 export VCS_STATUS := $(if $(shell git status -s 2> /dev/null || echo unversioned repo),'modified/untracked','clean')
 export BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-export DOCKER_REGISTRY   ?= {{ cookiecutter.default_docker_registry }}
-export DOCKER_IMAGE_NAME ?= {{ cookiecutter.project_name.lower().replace(' ', '-') }}
-export DOCKER_IMAGE_TAG  ?= $(shell cat VERSION 2> /dev/null || echo undefined)
-
 export COMPOSE_INPUT_DIR  := ./validation/input
 export COMPOSE_OUTPUT_DIR := .tmp/output
 
 OSPARC_DIR:=$(CURDIR)/.osparc
-
 APP_NAME := {{ cookiecutter.project_slug }}
 
 
 # INTEGRATION -----------------------------------------------------------------
-METADATA := .osparc/metadata.yml
+{% if "python" not in cookiecutter.docker_base %}
 
+export DOCKER_REGISTRY   ?= {{ cookiecutter.default_docker_registry }}
+export DOCKER_IMAGE_NAME ?= {{ cookiecutter.project_name.lower().replace(' ', '-') }}
+export DOCKER_IMAGE_TAG  ?= $(shell cat VERSION 2> /dev/null || echo undefined)
+
+METADATA := .osparc/metadata.yml
 
 .PHONY: VERSION
 VERSION: $(METADATA) ## generates VERSION from metadata
@@ -44,27 +36,26 @@ service.cli/run: $(METADATA) ## generates run from metadata
 docker-compose.yml: $(METADATA) ## generates docker-compose
 	# Injects metadata from $< as labels
 	@$(OSPARC_DIR)/bin/ooil.bash compose --to-spec-file $@ --metadata $<
-
+{%- endif %}
 
 
 # BUILD -----------------------------------------------------------------
-
+{% if "python" not in cookiecutter.docker_base %}
 define _docker_compose_build
 export DOCKER_BUILD_TARGET=$(if $(findstring -devel,$@),development,$(if $(findstring -cache,$@),cache,production)); \
 	docker buildx bake  --file docker-compose.yml $(if $(findstring -nc,$@),--no-cache,);
 endef
-
 
 .PHONY: build build-devel build-nc build-devel-nc
 build build-devel build-nc build-devel-nc: docker-compose.yml service.cli/run ## builds image
 	# building image local/${DOCKER_IMAGE_NAME}...
 	@$(call _docker_compose_build)
 
+
 define show-meta
 	$(foreach iid,$(shell docker images */$(1):* -q | sort | uniq),\
 		docker image inspect $(iid) | jq '.[0] | .RepoTags, .ContainerConfig.Labels, .Config.Labels';)
 endef
-
 
 .PHONY: info-build
 info-build: ## displays info on the built image
@@ -72,7 +63,7 @@ info-build: ## displays info on the built image
 	@docker images */$(DOCKER_IMAGE_NAME):*
 	# Tags and labels
 	@$(call show-meta,$(DOCKER_IMAGE_NAME))
-
+{%- endif %}
 
 # TESTS-----------------------------------------------------------------
 .PHONY: test tests
@@ -80,9 +71,8 @@ test tests:  ## runs validation tests
 	@$(OSPARC_DIR)/bin/ooil.bash test .
 
 
-
 # PUBLISHING -----------------------------------------------------------------
-
+{% if "python" not in cookiecutter.docker_base %}
 .PHONY: version-service-patch version-service-minor version-service-major
 version-service-patch version-service-minor version-service-major: $(METADATA) ## kernel/service versioning as patch
 	$(OSPARC_DIR)/bin/ooil.bash bump-version --metadata-file $<  --upgrade $(subst version-service-,,$@)
@@ -116,9 +106,7 @@ push-latest push-version: ## publish service to registry with latest/version tag
 
 pull-latest pull-version: ## pull service from registry
 	@docker pull $(DOCKER_REGISTRY)/$(DOCKER_IMAGE_NAME):$(if $(findstring version,$@),$(DOCKER_IMAGE_TAG),latest)
-
-
-
+{%- endif %}
 
 # COOCKIECUTTER -----------------------------------------------------------------
 
