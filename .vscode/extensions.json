@@ -2,6 +2,6 @@
   "recommendations": [
     "eamodio.gitlens",
     "ms-python.python",
-    "samuelcolvin.jinjahtml",
+    "exiasr.hadolint",
   ]
 }
