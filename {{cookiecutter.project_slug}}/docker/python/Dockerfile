@@ -55,10 +55,10 @@ RUN mkdir --parents /build/bin
 
 # copy src code
 COPY --chown=${SC_USER_NAME}:${SC_USER_NAME} \
-  src/{{ cookiecutter.project_package_name }} \
-  src/{{ cookiecutter.project_package_name }}
+  src \
+  src
 
-RUN cp -R src/{{ cookiecutter.project_package_name }}/* /build/bin
+RUN cp -R src/* /build/bin
 
 
 
