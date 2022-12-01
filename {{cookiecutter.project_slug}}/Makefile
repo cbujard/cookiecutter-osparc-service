@@ -48,11 +48,20 @@ devenv: .venv ## creates a virtual environment and install development tools
 	$</bin/pip3 install --quiet cookiecutter
 	@echo "To activate the venv, please execute 'source .venv/bin/activate'"
 
-
+.PHONY: config
 config: .venv guard-target ## config a service for a specific function 'make config target=mypackage.myfunc'
 	$</bin/python $(OSPARC_DIR)/bin/python_binder_program.py $(target) config
-	$(OSPARC_DIR)/bin/ooil compose -m .osparc/services/$(target)/metadata.yml
 
+docker-compose.yml:
+	$(OSPARC_DIR)/bin/ooil compose --metadata .osparc/services/$(target)/metadata.yml --to-spec-file=$@
+
+.PHONY: build
+build: docker-compose.yml ## builds service image
+	docker-compose build
+
+.PHONY: shell
+shell: docker-compose.yml guard-target  ## runs
+	docker-compose run {{ cookiecutter.project_package_name }}-$(target) bash
 
 {%- endif %}
 

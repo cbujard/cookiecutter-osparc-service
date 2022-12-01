@@ -365,7 +365,12 @@ def dump_dot_osparc_config(core_func: Callable, settings_metadata: dict[str, Any
                     "build": {
                         "dockerfile": "docker/{{ cookiecutter.docker_base.split(':')[0] }}/Dockerfile",
                         "target": "production",
-                    }
+                    },
+                    # for debugging
+                    "volumes": [
+                        "./validation/input:/input:ro",
+                        "./validation/output:/output:rw",
+                    ],
                 }
             },
         }
