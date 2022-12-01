@@ -49,22 +49,22 @@ devenv: .venv ## creates a virtual environment and install development tools
 	@echo "To activate the venv, please execute 'source .venv/bin/activate'"
 
 .PHONY: config
-config: .venv guard-target ## config a service for a specific function 'make config target=mypackage.myfunc'
-	$</bin/python $(OSPARC_DIR)/bin/python_binder_program.py $(target) config
+config: .venv guard-service ## config a service for a specific function 'make config service=mypackage.myfunc'
+	$</bin/python $(OSPARC_DIR)/bin/python_binder_program.py $(service) config
 
 .PHONY: docker-compose.yml
-docker-compose.yml: guard-target
+docker-compose.yml: guard-service
 	$(OSPARC_DIR)/bin/ooil compose \
-		--metadata .osparc/services/$(target)/metadata.yml \
+		--metadata .osparc/services/$(service)/metadata.yml \
 		--to-spec-file=$@
 
 .PHONY: build
-build: docker-compose.yml guard-target ## builds service image
+build: docker-compose.yml guard-service ## builds service image
 	docker-compose build
 
 .PHONY: shell
-shell: docker-compose.yml guard-target  ## runs
-	docker-compose run --entrypoint bash {{ cookiecutter.project_package_name }}-$(target)
+shell: docker-compose.yml guard-service  ## runs
+	docker-compose run --entrypoint bash {{ cookiecutter.project_package_name }}-$(service)
 
 {%- endif %}
 
