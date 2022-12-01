@@ -9,7 +9,12 @@ your requirements (e.g. requirements.txt)
 
 This will be re-configurable in future releases
 """
+import functools
+import operator
 
 
-def demo(*, x: int, y: float, z: list[bool], w: bool = False):
+def demo(
+    *, x: int, y: float, z: list[bool], w: bool = False
+) -> tuple[int, float, bool]:
     """some demo doc"""
+    return x, y, w or functools.reduce(operator.and_, z)
