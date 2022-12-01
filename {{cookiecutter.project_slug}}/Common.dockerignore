@@ -4,6 +4,7 @@
 !src/
 !service.cli/
 !docker/
+!.osparc/
 
 # Common
 README.md
