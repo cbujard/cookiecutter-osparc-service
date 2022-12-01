@@ -1,6 +1,6 @@
 {
   "publish_functions": [
-    "{{cookiecutter.project_package_name}}.demo_sample"
+    "{{cookiecutter.project_package_name}}.demo"
   ],
   "metadata": {
     "name": "{{ cookiecutter.project_name }}",
