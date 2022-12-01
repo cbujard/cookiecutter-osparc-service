@@ -52,6 +52,10 @@ devenv: .venv ## creates a virtual environment and install development tools
 config: .venv guard-service ## config a service for a specific function 'make config service=mypackage.myfunc'
 	$</bin/python $(OSPARC_DIR)/bin/python_binder_program.py $(service) config
 
+.PHONY: clean-config
+clean-config: ## cleans services config
+	rm -rf $(OSPARC_DIR)/services
+
 .PHONY: docker-compose.yml
 docker-compose.yml: guard-service
 	$(OSPARC_DIR)/bin/ooil compose \
