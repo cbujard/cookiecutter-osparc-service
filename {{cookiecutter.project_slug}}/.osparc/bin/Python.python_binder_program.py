@@ -54,10 +54,9 @@ except ImportError as err:
     raise
 
 
-FILE_FILEPATH = Path(sys.argv[0] if __name__ == "__main__" else __file__).resolve()
-THIS_FILENAME = FILE_FILEPATH.name.removeprefix("Python.")
-
-DOT_OSPARC_DIR = FILE_FILEPATH.parent.parent
+THIS_FILEPATH = Path(sys.argv[0] if __name__ == "__main__" else __file__).resolve()
+THIS_FILEPATH = THIS_FILEPATH.with_name(THIS_FILEPATH.name.removeprefix("Python."))
+DOT_OSPARC_DIR = THIS_FILEPATH.parent.parent
 
 assert DOT_OSPARC_DIR.exists()  # nosec
 assert DOT_OSPARC_DIR.name == ".osparc"  # nosec
@@ -72,7 +71,7 @@ error_console = Console(stderr=True)
 
 class DotOsparcSettings(BaseModel):
     publish_functions: list[str]
-    default_metadata: dict[str, Any]
+    metadata: dict[str, Any]
 
 
 def discover_published_functions(
@@ -93,6 +92,8 @@ def discover_published_functions(
         module_name = ".".join(parts[:-1])
         func_name = parts[-1]
 
+        assert dotted_name == "{module_name}.{func_name}"  # nosec
+
         try:
             module = None
             try:
@@ -102,7 +103,7 @@ def discover_published_functions(
             except (
                 ImportError,
                 ModuleNotFoundError,
-            ):
+            ) as err:
                 # Did not work, let's run some guesses
 
                 # namespaces to path: a.b.c.f  -> a/b/c
@@ -110,14 +111,12 @@ def discover_published_functions(
 
                 for guess_dir in (
                     dot_osparc_dir.parent,
-                    dot_osparc_dir.parent
-                    / "src/{{ cookiecutter.project_package_name }}",
                     dot_osparc_dir.parent / "src",
                 ):
                     # module can be a package 'a/b/__init__.py' or a file 'a/b.py'
                     for guess_module_path in (
-                        guess_dir / namespaces_path / "__init__.py",
                         guess_dir / (namespaces_path + ".py"),
+                        guess_dir / namespaces_path / "__init__.py",
                     ):
                         with suppress(*IMPORT_MODULE_EXCEPTIONS):
                             module = _import_module_from_path(
@@ -126,8 +125,10 @@ def discover_published_functions(
 
                 if module is None:
                     raise ImportError(
-                        f"Cannot find module {module_name} with function {func_name}"
-                    )
+                        f"Cannot find module {module_name}.{func_name}",
+                        name=getattr(err, "name", None),
+                        path=getattr(err, "path", None),
+                    ) from err
 
             published.append(getattr(module, func_name))
 
@@ -202,7 +203,7 @@ class SchemaResolver:
 
 
 @validate_arguments(config=dict(arbitrary_types_allowed=True))
-def dump_dot_osparc_config(core_func: Callable, default_metadata: dict[str, Any]):
+def dump_dot_osparc_config(core_func: Callable, settings_metadata: dict[str, Any]):
     def _create_inputs(parameters: Mapping[str, Parameter]) -> dict[str, Any]:
         inputs = {}
         for parameter in parameters.values():
@@ -281,15 +282,15 @@ def dump_dot_osparc_config(core_func: Callable, default_metadata: dict[str, Any]
     outputs = _create_outputs(signature.return_annotation)
 
     # TODO: sync this with metadata and runtime models!
-    config_folder = DOT_OSPARC_DIR / core_func.__name__
+    config_folder = DOT_OSPARC_DIR / "services" / core_func.__name__
     config_folder.mkdir(parents=True, exist_ok=True)
 
     def _update_metadata_file():
+        metadata = deepcopy(settings_metadata)
         metadata_path = config_folder / "metadata.yml"
 
         if not metadata_path.exists():
             # init
-            metadata = deepcopy(default_metadata)
             metadata.update(
                 **{
                     "name": f"{core_func.__name__}",
@@ -299,7 +300,7 @@ def dump_dot_osparc_config(core_func: Callable, default_metadata: dict[str, Any]
         else:
             # previous version
             prev_metadata = yaml.safe_load(metadata_path.read_text())
-            metadata.update(prev_metadata)
+            prev_metadata.update(metadata)
 
         metadata.update(
             **{
@@ -330,7 +331,11 @@ def dump_dot_osparc_config(core_func: Callable, default_metadata: dict[str, Any]
                 "name": "ContainerSpec",
                 "type": "ContainerSpec",
                 "value": {
-                    "Command": [f".osparc/{THIS_FILENAME}", core_func.__name__, "run"]
+                    "Command": [
+                        f".osparc/{THIS_FILEPATH.relative_to(DOT_OSPARC_DIR)}",
+                        core_func.__name__,
+                        "run",
+                    ]
                 },
             },
         )
@@ -483,7 +488,7 @@ def create_group(core_func: Callable, settings: DotOsparcSettings) -> typer.Type
 
         # TOOLING
         elif dot_osparc_config:
-            dump_dot_osparc_config(core_func, settings.default_metadata)
+            dump_dot_osparc_config(core_func, settings.metadata)
             return
 
     return app

@@ -2,7 +2,7 @@
   "publish_functions": [
     "{{cookiecutter.project_package_name}}.demo_sample"
   ],
-  "default_metadata": {
+  "metadata": {
     "name": "{{ cookiecutter.project_name }}",
     "key": "simcore/services/{%- if cookiecutter.project_type == "computational" -%}comp{%- elif cookiecutter.project_type == "dynamic" -%}dynamic{%- endif -%}/{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
     "type": "{{ cookiecutter.project_type }}",
