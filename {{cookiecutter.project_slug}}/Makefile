@@ -29,11 +29,17 @@ APP_NAME := {{ cookiecutter.project_slug }}
 		setuptools
 	@$@/bin/pip3 list --verbose
 
-devenv: .venv ## create a python virtual environment with dev tools (e.g. linters, etc)
-	$</bin/pip3 --quiet install -r ./osparc/requirements.txt
-	# Installing pre-commit hooks in current .git repo
-	@$</bin/pre-commit install
-	@echo "To activate the venv, execute 'source .venv/bin/activate'"
+devenv: .venv ## creates a virtual environment and install development tools
+	# Installing .osparc requirements
+	$</bin/pip3 install --quiet -r .osparc/requirements.txt
+	# Installing cookiecutter for replay
+	$</bin/pip3 install --quiet cookiecutter
+	@echo "To activate the venv, please execute 'source .venv/bin/activate'"
+
+
+config: .venv ## config a service for a specific function 'make config target=mypackage.myfunc'
+	$</bin/python .osparc/bin/python_binder_program.py config $(target)
+
 {%- endif %}
 
 # INTEGRATION -----------------------------------------------------------------
