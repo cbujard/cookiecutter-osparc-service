@@ -298,7 +298,8 @@ def dump_dot_osparc_config(core_func: Callable, settings_metadata: dict[str, Any
             metadata.update(
                 **{
                     "name": f"{core_func.__name__}",
-                    "key": f"{metadata['key']}.{core_func.__name__}",
+                    # TODO: want to use namespace.func
+                    "key": f"{metadata['key']}-{core_func.__name__}",
                 }
             )
         else:
