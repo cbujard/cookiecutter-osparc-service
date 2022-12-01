@@ -289,6 +289,12 @@ def dump_dot_osparc_config(core_func: Callable, settings_metadata: dict[str, Any
     config_folder = DOT_OSPARC_DIR / "services" / core_func.__name__
     config_folder.mkdir(parents=True, exist_ok=True)
 
+    # NOTE settings metadata is for the entire repo
+    service_name = f"{settings_metadata['name']}-{core_func.__name__}"
+    service_key = f"{settings_metadata['key']}-{core_func.__name__}"
+
+    assert service_key.endswith(service_name)  # nosec
+
     def _update_metadata_file():
         metadata = deepcopy(settings_metadata)
         metadata_path = config_folder / "metadata.yml"
@@ -297,13 +303,12 @@ def dump_dot_osparc_config(core_func: Callable, settings_metadata: dict[str, Any
             # init
             metadata.update(
                 **{
-                    "name": f"{core_func.__name__}",
-                    # TODO: want to use namespace.func
-                    "key": f"{metadata['key']}-{core_func.__name__}",
+                    "name": service_name,
+                    "key": service_key,
                 }
             )
         else:
-            # previous version
+            # previous version takes precedence
             prev_metadata = yaml.safe_load(metadata_path.read_text())
             prev_metadata.update(metadata)
 
@@ -318,6 +323,7 @@ def dump_dot_osparc_config(core_func: Callable, settings_metadata: dict[str, Any
             yaml.safe_dump(metadata, fh, indent=1, sort_keys=False)
 
         rich.print(f"Updated {metadata_path}")
+        return metadata
 
     def _update_runtime_file():
         runtime_path = config_folder / "runtime.yml"
@@ -348,9 +354,31 @@ def dump_dot_osparc_config(core_func: Callable, settings_metadata: dict[str, Any
             yaml.safe_dump(runtime, fh, indent=1, sort_keys=False)
 
         rich.print(f"Updated {runtime_path}")
+        return runtime
+
+    def _update_docker_compose_override_file():
+        compose_specs_path = config_folder / "docker-compose.overwrite.yml"
+        compose_specs = {
+            "version": "3.7",
+            "services": {
+                f"{service_name}": {
+                    "build": {
+                        "dockerfile": "docker/{{ cookiecutter.docker_base.split(':')[0] }}/Dockerfile",
+                        "target": "production",
+                    }
+                }
+            },
+        }
+
+        with compose_specs_path.open("wt") as fh:
+            yaml.safe_dump(compose_specs, fh, indent=1, sort_keys=False)
+
+        rich.print(f"Updated {compose_specs_path}")
+        return compose_specs
 
     _update_metadata_file()
     _update_runtime_file()
+    _update_docker_compose_override_file()
 
 
 def echo_jsonschema(core_func: Callable):

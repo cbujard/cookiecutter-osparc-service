@@ -93,7 +93,8 @@ def check_python():
                     fp.unlink(missing_ok=True)
 
     if is_pyconfig:
-        shutil.rmtree("service.cli")
+        shutil.rmtree("service.cli", ignore_errors=True)
+        Path(".osparc/docker-compose.overwrite.yml").unlink(missing_ok=True)
 
         # settings.json contains metadata
         if (Path(".osparc") / "settings.json").exists():
