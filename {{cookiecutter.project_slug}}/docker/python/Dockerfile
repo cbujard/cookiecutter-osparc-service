@@ -27,40 +27,6 @@ RUN apt-get update \
 
 RUN python -m pip --no-cache install --upgrade pip wheel setuptools
 
-# -------------------------- Build stage -------------------
-# Installs build/package management tools and third party dependencies
-#
-# + /build             WORKDIR
-#
-FROM base as build
-
-ENV SC_BUILD_TARGET build
-
-# ------------------------------------------------------------------------------------
-#TODO:
-# uncomment and adapt if build dependencies shall be installed
-#RUN apt-get update \
-# && apt-get -y install --no-install-recommends \
-# gcc \
-# git \
-# && rm -rf /var/lib/apt/lists/*
-
-# uncomment and adapt if python necessary
-#RUN $SC_PIP install --upgrade pip wheel setuptools
-# ------------------------------------------------------------------------------------
-
-WORKDIR /build
-# defines the output of the build
-RUN mkdir --parents /build/bin
-
-# copy src code
-COPY --chown=${SC_USER_NAME}:${SC_USER_NAME} \
-  src \
-  src
-
-RUN cp -R src/* /build/bin
-
-
 
 # --------------------------Production stage -------------------
 # Final cleanup up to reduce image size and startup setup
@@ -119,11 +85,9 @@ ENV PATH="/home/${SC_USER_NAME}/.osparc/bin:${PATH}"
 
 # copy binaries from build
 ENV PYTHONPATH={{ cookiecutter.project_package_name }}
-COPY --from=build \
-  --chown=${SC_USER_NAME}:${SC_USER_NAME} \
-  /build/bin \
-  {{ cookiecutter.project_package_name }}
-
+COPY --chown=${SC_USER_NAME}:${SC_USER_NAME} \
+  src \
+  src
 
 
 # FIXME: produce real binary python_binder_program.py (see entrypoints)
