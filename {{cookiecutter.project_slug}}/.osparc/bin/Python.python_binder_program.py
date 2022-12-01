@@ -122,6 +122,10 @@ def discover_published_functions(
                             module = _import_module_from_path(
                                 module_name, guess_module_path
                             )
+                            if module:
+                                break
+                    if module:
+                        break
 
                 if module is None:
                     raise ImportError(
