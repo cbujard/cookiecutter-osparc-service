@@ -121,7 +121,7 @@ def discover_published_functions(
                 raise ImportError(
                     f"Cannot find module {module_name}.{func_name}",
                     name=module_name,
-                ) from err
+                )
 
             published.append(getattr(module, func_name))
 
