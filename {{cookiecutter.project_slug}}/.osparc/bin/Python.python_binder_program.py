@@ -120,20 +120,14 @@ def discover_published_functions(
             if module is None:
                 raise ImportError(
                     f"Cannot find module {module_name}.{func_name}",
-                    name=getattr(err, "name", None),
-                    path=getattr(err, "path", None),
+                    name=module_name,
                 ) from err
 
             published.append(getattr(module, func_name))
 
-        except (AttributeError, ImportError) as exc:
+        except AttributeError as exc:
             error_console.log(
-                "{} Skipping function '{}' {}:\n{}".format(
-                    ALERT_PREFIX,
-                    dotted_name,
-                    f"Could not import this function. {TIP_PREFIX} run 'export PYTHONPATH=/path/to/my/package'",
-                    indent(f"{exc}", prefix="->"),
-                )
+                f"{ALERT_PREFIX} Skipping function '{dotted_name}':\n{indent(f'{exc}', prefix='->')}"
             )
 
     return published
