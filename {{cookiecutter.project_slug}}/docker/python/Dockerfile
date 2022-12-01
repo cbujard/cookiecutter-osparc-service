@@ -127,4 +127,4 @@ COPY --from=build \
 
 
 # FIXME: produce real binary python_binder_program.py (see entrypoints)
-ENTRYPOINT [ "/bin/sh", "docker/entrypoint.sh", "python", ".osparc/bin/python_binder_program.py" ]
+ENTRYPOINT [ "/bin/sh", "docker/entrypoint.sh", "python" ]

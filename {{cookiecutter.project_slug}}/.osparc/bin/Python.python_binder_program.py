@@ -310,7 +310,7 @@ def dump_dot_osparc_config(core_func: Callable, settings_metadata: dict[str, Any
         else:
             # previous version takes precedence
             prev_metadata = yaml.safe_load(metadata_path.read_text())
-            prev_metadata.update(metadata)
+            metadata.update(prev_metadata)
 
         metadata.update(
             **{
@@ -343,7 +343,7 @@ def dump_dot_osparc_config(core_func: Callable, settings_metadata: dict[str, Any
                 "type": "ContainerSpec",
                 "value": {
                     "Command": [
-                        f".osparc/{THIS_FILEPATH.relative_to(DOT_OSPARC_DIR)}",
+                        THIS_FILEPATH.name,
                         core_func.__name__,
                     ]
                 },
