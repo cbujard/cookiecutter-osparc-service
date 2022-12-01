@@ -14,6 +14,18 @@ export COMPOSE_OUTPUT_DIR := .tmp/output
 OSPARC_DIR:=$(CURDIR)/.osparc
 APP_NAME := {{ cookiecutter.project_slug }}
 
+# Check that given variables are set and all have non-empty values,
+# die with an error otherwise.
+#
+# Params:
+#   1. Variable name(s) to test.
+#   2. (optional) Error message to print.
+guard-%:
+	@ if [ "${${*}}" = "" ]; then \
+		echo "Missing input variable \"$*\""; \
+		exit 1; \
+	fi
+
 {% if "python" in cookiecutter.docker_base %}
 ## ENVIRONMENT -------------------------------
 
@@ -31,14 +43,16 @@ APP_NAME := {{ cookiecutter.project_slug }}
 
 devenv: .venv ## creates a virtual environment and install development tools
 	# Installing .osparc requirements
-	$</bin/pip3 install --quiet -r .osparc/requirements.txt
+	$</bin/pip3 install --quiet -r $(OSPARC_DIR)/requirements.txt
 	# Installing cookiecutter for replay
 	$</bin/pip3 install --quiet cookiecutter
 	@echo "To activate the venv, please execute 'source .venv/bin/activate'"
 
 
-config: .venv ## config a service for a specific function 'make config target=mypackage.myfunc'
-	$</bin/python .osparc/bin/python_binder_program.py config $(target)
+config: .venv guard-target ## config a service for a specific function 'make config target=mypackage.myfunc'
+	$</bin/python $(OSPARC_DIR)/bin/python_binder_program.py $(target) config
+	$(OSPARC_DIR)/bin/ooil compose -m .osparc/services/$(target)/metadata.yml
+
 
 {%- endif %}
 
