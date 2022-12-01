@@ -92,7 +92,7 @@ def discover_published_functions(
         module_name = ".".join(parts[:-1])
         func_name = parts[-1]
 
-        assert dotted_name == "{module_name}.{func_name}"  # nosec
+        assert dotted_name == f"{module_name}.{func_name}"  # nosec
 
         try:
             module = None
@@ -334,7 +334,6 @@ def dump_dot_osparc_config(core_func: Callable, settings_metadata: dict[str, Any
                     "Command": [
                         f".osparc/{THIS_FILEPATH.relative_to(DOT_OSPARC_DIR)}",
                         core_func.__name__,
-                        "run",
                     ]
                 },
             },
