@@ -6,9 +6,10 @@
 ```console
 $ make help
 
-$ make config target=demo
-$ make build target=demo
-$ make shell target=demo
+$ make devenv
+$ make config service=demo
+$ make build service=demo
+$ make shell service=demo
 ```
 {% else %}
 ## Usage

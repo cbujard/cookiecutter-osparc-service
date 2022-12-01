@@ -64,7 +64,9 @@ build: docker-compose.yml guard-service ## builds service image
 
 .PHONY: shell
 shell: docker-compose.yml guard-service  ## runs
-	docker-compose run --entrypoint bash {{ cookiecutter.project_package_name }}-$(service)
+	docker-compose run \
+		--entrypoint bash \
+		{{ cookiecutter.project_package_name }}-$(service)
 
 {%- endif %}
 
