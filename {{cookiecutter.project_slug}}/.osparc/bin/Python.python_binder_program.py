@@ -96,43 +96,33 @@ def discover_published_functions(
 
         try:
             module = None
-            try:
-                # Just import 'module_name'
-                module = importlib.import_module(module_name)
+            # namespaces to path: a.b.c.f  -> a/b/c
+            namespaces_path = "/".join(parts[:-1])
 
-            except (
-                ImportError,
-                ModuleNotFoundError,
-            ) as err:
-                # Did not work, let's run some guesses
-
-                # namespaces to path: a.b.c.f  -> a/b/c
-                namespaces_path = "/".join(parts[:-1])
-
-                for guess_dir in (
-                    dot_osparc_dir.parent,
-                    dot_osparc_dir.parent / "src",
+            for guess_dir in (
+                dot_osparc_dir.parent,
+                dot_osparc_dir.parent / "src",
+            ):
+                # module can be a package 'a/b/__init__.py' or a file 'a/b.py'
+                for guess_module_path in (
+                    guess_dir / (namespaces_path + ".py"),
+                    guess_dir / namespaces_path / "__init__.py",
                 ):
-                    # module can be a package 'a/b/__init__.py' or a file 'a/b.py'
-                    for guess_module_path in (
-                        guess_dir / (namespaces_path + ".py"),
-                        guess_dir / namespaces_path / "__init__.py",
-                    ):
-                        with suppress(*IMPORT_MODULE_EXCEPTIONS):
-                            module = _import_module_from_path(
-                                module_name, guess_module_path
-                            )
-                            if module:
-                                break
-                    if module:
-                        break
+                    with suppress(*IMPORT_MODULE_EXCEPTIONS):
+                        module = _import_module_from_path(
+                            module_name, guess_module_path
+                        )
+                        if module:
+                            break
+                if module:
+                    break
 
-                if module is None:
-                    raise ImportError(
-                        f"Cannot find module {module_name}.{func_name}",
-                        name=getattr(err, "name", None),
-                        path=getattr(err, "path", None),
-                    ) from err
+            if module is None:
+                raise ImportError(
+                    f"Cannot find module {module_name}.{func_name}",
+                    name=getattr(err, "name", None),
+                    path=getattr(err, "path", None),
+                ) from err
 
             published.append(getattr(module, func_name))
 
