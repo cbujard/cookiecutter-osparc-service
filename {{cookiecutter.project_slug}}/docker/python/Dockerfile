@@ -84,11 +84,10 @@ ENV PATH="/home/${SC_USER_NAME}/.osparc/bin:${PATH}"
 {%- endif %}
 
 # copy binaries from build
-ENV PYTHONPATH={{ cookiecutter.project_package_name }}
 COPY --chown=${SC_USER_NAME}:${SC_USER_NAME} \
   src \
   src
 
 
 # FIXME: produce real binary python_binder_program.py (see entrypoints)
-ENTRYPOINT [ "/bin/sh", "docker/entrypoint.sh", "python" ]
+ENTRYPOINT [ "/bin/sh", "docker/entrypoint.sh", "python", "python_binder_program.py" ]

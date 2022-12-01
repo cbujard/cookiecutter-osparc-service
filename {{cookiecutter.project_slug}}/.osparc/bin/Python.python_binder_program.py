@@ -327,8 +327,8 @@ def dump_dot_osparc_config(core_func: Callable, settings_metadata: dict[str, Any
                 "type": "ContainerSpec",
                 "value": {
                     "Command": [
-                        THIS_FILEPATH.name,
                         core_func.__name__,
+                        "run"
                     ]
                 },
             },
