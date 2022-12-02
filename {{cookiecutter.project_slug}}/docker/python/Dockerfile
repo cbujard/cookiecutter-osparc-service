@@ -89,5 +89,4 @@ COPY --chown=${SC_USER_NAME}:${SC_USER_NAME} \
   src
 
 
-# FIXME: produce real binary python_binder_program.py (see entrypoints)
-ENTRYPOINT [ "/bin/sh", "docker/entrypoint.sh", "python", "python_binder_program.py" ]
+ENTRYPOINT [ "/bin/sh", "docker/entrypoint.sh" ]

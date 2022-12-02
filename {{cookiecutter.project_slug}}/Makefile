@@ -53,8 +53,9 @@ config: .venv guard-service ## config a service for a specific function 'make co
 	$</bin/python $(OSPARC_DIR)/bin/python_binder_program.py $(service) config
 
 .PHONY: clean-config
-clean-config: ## cleans services config
-	rm -rf $(OSPARC_DIR)/services
+clean-config: guard-service ## cleans services config
+	rm -rf $(OSPARC_DIR)/services $(service)
+	rm $(OSPARC_DIR)/$(service)
 
 .PHONY: docker-compose.yml
 docker-compose.yml: guard-service
@@ -67,7 +68,7 @@ build: docker-compose.yml guard-service ## builds service image
 	docker-compose build
 
 .PHONY: shell
-shell: docker-compose.yml guard-service  ## starts container's shell
+shell: guard-service  ## starts container's shell
 	docker-compose run \
 		--entrypoint bash \
 		{{ cookiecutter.project_package_name }}-$(service)
