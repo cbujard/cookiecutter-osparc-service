@@ -6,7 +6,7 @@
     "name": "{{ cookiecutter.project_name }}",
     "key": "simcore/services/{%- if cookiecutter.project_type == "computational" -%}comp{%- elif cookiecutter.project_type == "dynamic" -%}dynamic{%- endif -%}/{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
     "type": "{{ cookiecutter.project_type }}",
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Test.svg/315px-Test.svg.png",
+    "thumbnail": "https://github.com/ITISFoundation/osparc-simcore-python-client/raw/4e8b18494f3191d55f6692a6a605818aeeb83f95/docs/_media/mwl.png",
     "integration-version": "1.0.0",
     "version": "{{ cookiecutter.version }}",
     "description": "{{ cookiecutter.project_short_description }}",
