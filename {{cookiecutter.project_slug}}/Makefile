@@ -53,9 +53,9 @@ config: .venv guard-service ## config a service for a specific function 'make co
 	$</bin/python $(OSPARC_DIR)/bin/python_binder_program.py $(service) config
 
 .PHONY: clean-config
-clean-config: guard-service ## cleans services config
-	rm -rf $(OSPARC_DIR)/services $(service)
-	rm $(OSPARC_DIR)/$(service)
+config-clean: guard-service ## cleans services config
+	-rm -rf $(OSPARC_DIR)/services $(service)
+	-rm $(OSPARC_DIR)/$(service)
 
 .PHONY: docker-compose.yml
 docker-compose.yml: guard-service
