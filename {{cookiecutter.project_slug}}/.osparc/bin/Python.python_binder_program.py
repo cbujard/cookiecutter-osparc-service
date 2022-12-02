@@ -23,6 +23,7 @@ import inspect
 import json
 import logging
 import os
+import stat
 import sys
 from contextlib import suppress
 from copy import deepcopy
@@ -321,15 +322,17 @@ def dump_dot_osparc_config(core_func: Callable, settings_metadata: dict[str, Any
         for item in delete:
             runtime["settings"].remove(item)
 
+        # create a script
+        cmd_path = DOT_OSPARC_DIR / "bin" / core_func.__name__
+        cmd_path.write_text(f"{THIS_FILEPATH.name} {core_func.__name__} run")
+        cmd_path.chmod( cmd_path.stat().st_mode | stat.S_IEXEC )
+
         runtime["settings"].append(
             {
                 "name": "ContainerSpec",
                 "type": "ContainerSpec",
                 "value": {
-                    "Command": [
-                        core_func.__name__,
-                        "run"
-                    ]
+                    "Command": [ core_func.__name__ ]
                 },
             },
         )
