@@ -9,12 +9,9 @@ your requirements (e.g. requirements.txt)
 
 This will be re-configurable in future releases
 """
-import functools
-import operator
-
 
 def demo(
-    *, x: int, y: float, z: list[bool], w: bool = False
-) -> tuple[int, float, bool]:
+    *, x: int, y: float = 3.14
+) -> bool:
     """some demo doc"""
-    return x, y, w or functools.reduce(operator.and_, z)
+    return x*y>0
