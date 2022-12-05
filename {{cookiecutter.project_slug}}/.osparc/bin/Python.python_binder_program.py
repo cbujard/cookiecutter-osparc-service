@@ -71,7 +71,7 @@ error_console = Console(stderr=True)
 
 
 class DotOsparcSettings(BaseModel):
-    publish_functions: list[str]
+    service_functions: list[str]
     metadata: dict[str, Any]
 
 
@@ -543,7 +543,7 @@ def load_settings(settings_path: Path) -> DotOsparcSettings:
             f"Initializing {settings_path} ... \n"
             "Name a function to expose (e.g. {{ cookiecutter.project_package_name }}.my_function): "
         )
-        settings.publish_functions = [value]
+        settings.service_functions = [value]
 
         settings_path.write_text(settings.json(indent=1))
         run_logger.info(" %s updated %s", ALERT_PREFIX, settings_path)
@@ -557,7 +557,7 @@ if __name__ == "__main__":
 
         main = create_cli(
             expose=discover_published_functions(
-                settings.publish_functions, dot_osparc_dir=DOT_OSPARC_DIR
+                settings.service_functions, dot_osparc_dir=DOT_OSPARC_DIR
             ),
             settings=settings,
         )
