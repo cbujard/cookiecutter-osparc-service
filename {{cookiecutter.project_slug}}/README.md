@@ -13,7 +13,6 @@ $ make shell service=demo
 ```
 {% else %}
 ## Usage
-
 ```console
 $ make help
 
@@ -23,7 +22,6 @@ $ make tests
 ```
 
 ## Workflow
-
 1. The source code shall be copied to the [src]({{ cookiecutter.project_slug }}/src/{{ cookiecutter.project_package_name }}) folder.
 1. The [Dockerfile]({{ cookiecutter.project_slug }}/src/Dockerfile) shall be modified to compile the source code.
 2. The [.osparc](.osparc) is the configuration folder and source of truth for metadata: describes service info and expected inputs/outputs of the service.
