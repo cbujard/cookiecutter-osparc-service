@@ -6,6 +6,7 @@ Cookiecutter to generate an oSparc compatible service for the oSparc simcore pla
 
 
 ## Requirements
+
 - GNU Make
 - Python3
 - Python3-venv (recommended to work in a virtual environment)
